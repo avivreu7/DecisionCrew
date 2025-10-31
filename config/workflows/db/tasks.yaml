@@ -1,0 +1,32 @@
+db_planning_task:
+  agent: "db_planner"
+  description: "Analyze the user's KIR: '{topic}'. Formulate 3-5 KIQs answerable strictly via the internal database. Identify the relevant tables for each KIQ."
+  expected_output: |
+    A plan containing:
+    1. Numbered KIQs focused on database information.
+    2. For each KIQ, list the target database tables.
+
+db_querying_task:
+  agent: "db_querier"
+  context:
+    - "db_planning_task"
+  description: "Based on the DB planning task, write and execute SQL queries using the 'Database Query Tool' for each KIQ. Retrieve data from the specified tables."
+  expected_output: "Raw data results retrieved from the database for each KIQ, clearly separated."
+
+db_analysis_task:
+  agent: "db_analyst"
+  context:
+    - "db_querying_task"
+  description: "Analyze the raw data provided by the DB Querier. Identify significant historical patterns, trends, anomalies, or connections relevant to the original KIR '{topic}'. Focus only on insights derivable from the database content."
+  expected_output: |
+    A structured analysis in Markdown containing:
+    1. A summary of key patterns or trends found.
+    2. Any notable anomalies or connections identified.
+    3. An assessment of how these historical patterns relate to the KIR.
+
+db_writing_task:
+  agent: "db_writer"
+  context:
+    - "db_analysis_task"
+  description: "Synthesize the findings from the DB Analyst into a final report. Ensure the report focuses solely on insights derived from the database analysis. The entire output MUST be in professional Hebrew."
+  expected_output: "A final, concise report in Hebrew, summarizing the key findings and patterns discovered in the database relevant to '{topic}'."

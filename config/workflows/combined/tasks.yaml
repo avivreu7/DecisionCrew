@@ -1,0 +1,73 @@
+planning_task:
+  agent: "planner"
+  description: |
+    1. Analyze the user's KIR: '{topic}'. **Carefully check if a text snippet (like CSV data) is included in the prompt.**
+    2. Deconstruct into KIQs.
+    3. Determine the best source for each KIQ: general OSINT (Serper) or the text data provided directly in the prompt context ('Provided_Text_Data').
+    4. Compile an ICP specifying KIQs, source types (OSINT/Provided_Text_Data), and priorities.
+  expected_output: |
+    A structured ICP document containing:
+    1. Numbered KIQs.
+    2. For each KIQ: Recommended source (OSINT tool or 'Provided_Text_Data') and analysis instructions.
+
+osint_collection_task: 
+  agent: "collector"
+  context:
+    - "planning_task"
+  description: |
+    Execute ONLY the OSINT portions of the ICP, focusing on KIQs marked for OSINT.
+  expected_output: |
+    A raw OSINT report in Markdown, structured by KIQ. Under each KIQ addressed:
+    - Bulleted list of key information found.
+    - Source URL/details.
+    - Preliminary source reliability rating (A-F).
+    If no OSINT collection was requested, state "No OSINT collection required by plan."
+
+combined_analysis_task:
+  agent: "combined_analyst"
+  context:
+    - "planning_task"
+    - "osint_collection_task" 
+  description: |
+    Perform a multi-stage analysis on '{topic}', integrating findings from the OSINT report and the raw text data provided in the prompt.
+    1. **Analyze Provided Text:** Carefully re-read the original prompt '{topic}' to find the text data snippet (marked with '--- START OF UPLOADED CSV DATA ---'...'--- END OF UPLOADED CSV DATA ---'). Analyze this data to answer the KIQs assigned to 'Provided_Text_Data' in the plan.
+    2. **Relevance Filter:** Filter all data (OSINT & Provided Text) for direct RELEVANCE.
+    3. **Corroboration & Grading:** Group relevant data. Look for CORROBORATION between OSINT and the provided text. Assign Admiralty Code scores (e.g., B2 for OSINT, A1/B1 for the provided text data as it's a direct source).
+    4. **ACH Application:** Identify 2-3 plausible hypotheses based on the combined data. Evaluate scored evidence against them.
+    5. **Indicativeness & Synthesis:** Synthesize 3-5 critical insights from the combined sources. State the evidence and score for each. Assess the INDICATIVENESS of the findings.
+  expected_output: |
+    A structured multi-source analytical report containing:
+    1. Final judgment on the most likely hypothesis based on combined evidence.
+    2. Bulleted list of key insights, citing supporting evidence and scores (e.g., 'OSINT report X [B2]', 'Provided CSV data [A1]').
+    3. Concluding section on the 'Indicative Value' of the fused findings.
+
+forecasting_task:
+  agent: "forecaster"
+  context:
+    - "combined_analysis_task"
+  description: |
+    Based on the multi-source analytical report, generate a calibrated probabilistic forecast for '{topic}' using Bayesian reasoning.
+    1. State your initial 'prior probability' (base rate).
+    2. Review the fused insights and their evidence scores (considering OSINT & provided text data quality).
+    3. Explain how the combined evidence updates your belief.
+    4. Formulate your final 'posterior probability' as a percentage range.
+    5. Assign a qualitative likelihood term.
+    6. Identify key future indicators.
+  expected_output: |
+    A concise forecast statement including:
+    - Prior probability.
+    - Justification for update based on combined evidence quality.
+    - Final posterior forecast percentage range.
+    - Qualitative likelihood term.
+    - Bulleted list of 'Key Indicators to Watch'.
+
+writing_task:
+  agent: "writer"
+  context:
+    - "combined_analysis_task"
+    - "forecasting_task"
+  description: |
+    Synthesize the multi-source analysis and forecast into a single, coherent executive briefing document, following BLUF. Integrate findings smoothly from OSINT and the provided text data.
+    IMPORTANT: The entire final output MUST be in professional Hebrew.
+  expected_output: |
+    A final, polished executive briefing document in Hebrew (Markdown format), including sections for 'הערכת מפתח', 'תובנות עיקריות' (from combined sources), and 'תחזית'.

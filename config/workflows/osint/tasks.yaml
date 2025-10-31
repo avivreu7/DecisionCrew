@@ -1,0 +1,80 @@
+planning_task:
+  agent: "planner"
+  description: |
+    1. Analyze the user's high-level intelligence requirement (KIR): '{topic}'.
+    2. Deconstruct it into its core components and underlying assumptions.
+    3. Formulate a set of 3-5 specific Key Intelligence Questions (KIQs).
+    4. Define the optimal OSINT source types for these KIQs. Your plan MUST prioritize sources from the last 24-48 hours.
+    5. Compile these elements into a formal Intelligence Collection Plan (ICP).
+  expected_output: |
+    A structured Markdown document titled 'Intelligence Collection Plan (ICP)'. The document must contain:
+    1. A numbered list of the Key Intelligence Questions (KIQs).
+    2. A bulleted list of recommended source types and collection priorities, with an emphasis on recent information.
+
+collection_task:
+  agent: "collector"
+  context:
+    - "planning_task"
+  description: |
+    Execute the Intelligence Collection Plan (ICP). For each KIQ, use your OSINT tools (especially the NewsAPI tool for recent events) to find relevant information. You must gather data from a diverse range of sources as recommended.
+  expected_output: |
+    A raw intelligence report in Markdown, structured by KIQ. Under each KIQ, provide:
+    - A bulleted list of key pieces of information found.
+    - The source URL for each piece of information.
+    - A preliminary source reliability rating from A-F (e.g., 'Source Rating: B').
+
+database_query_task:
+  agent: "database_analyst"
+  context:
+    - "planning_task"
+  description: "Based on the KIQs from the Intelligence Collection Plan, write and execute SQL queries against the internal database to find relevant historical events, entities, or patterns. Your findings will provide internal context to the main analysis."
+  expected_output: "A summary of relevant findings from the database, including any rows or statistics that directly address the KIQs."
+
+analysis_task:
+  agent: "analyst"
+  context:
+    - "collection_task"
+    - "database_query_task"
+  description: |
+    Perform a multi-stage analysis on '{topic}', using both the raw OSINT report and the historical data from the database.
+    1. **Relevance Filter:** First, filter all collected data for its direct RELEVANCE to the specific KIQs. Discard irrelevant information.
+    2. **Corroboration & Grading:** Group the relevant data. Look for CORROBORATION across independent sources. For each key piece of evidence, assign a full Admiralty Code score (e.g., B2, C3) based on the source's rating and your corroboration findings.
+    3. **ACH Application:** Identify 2-3 plausible, competing hypotheses. Evaluate your scored evidence against these hypotheses to determine the most likely one.
+    4. **Indicativeness Assessment & Synthesis:** Synthesize your 3-5 most critical insights. For each insight, explicitly state the evidence and its score. Most importantly, assess and state the INDICATIVENESS of your findings - what do they suggest about future intentions or capabilities?
+  expected_output: |
+    A structured analytical report. It must contain:
+    1. The final analytical judgment on the most likely hypothesis.
+    2. A bulleted list of the key insights. Each insight must be followed by the specific evidence that supports it, including the evidence's Admiralty Code score (e.g., 'Evidence XYZ [A2]').
+    3. A concluding section on the 'Indicative Value' of the findings, explaining what these insights might foreshadow.
+
+forecasting_task:
+  agent: "forecaster"
+  context:
+    - "analysis_task"
+  description: |
+    Based on the conclusive analytical report, generate a calibrated probabilistic forecast for '{topic}' using Bayesian reasoning.
+    1. State your initial 'prior probability' (base rate) for this type of event based on general knowledge.
+    2. Review the key insights and their evidence scores from the Analyst.
+    3. Explicitly state how this new, high-quality evidence updates your belief from the prior.
+    4. Formulate your final 'posterior probability' as a percentage range.
+    5. Assign a qualitative likelihood term (e.g., 'Likely', 'Unlikely').
+    6. Identify key future indicators that could alter this forecast.
+  expected_output: |
+    A concise forecast statement. It must include:
+    - The prior probability (base rate).
+    - A justification explaining how new evidence led to an update.
+    - The final posterior forecast as a percentage range.
+    - The corresponding qualitative term.
+    - A bulleted list of 'Key Indicators to Watch'.
+
+writing_task:
+  agent: "writer"
+  context:
+    - "analysis_task"
+    - "forecasting_task"
+  description: |
+    Synthesize the key insights from the analysis report and the probabilistic forecast into a single, coherent executive briefing document.
+    Adhere strictly to the BLUF (Bottom Line Up Front) principle. The document must have a clear, logical structure.
+    IMPORTANT: The entire final output document MUST be written in professional, high-level Hebrew. Use the English inputs from the previous tasks to formulate your response, but the final text you produce must be in Hebrew.
+  expected_output: |
+    A final, polished executive briefing document, written entirely in Hebrew, ready to be presented to a senior decision-maker. The document should be in Markdown format and include clear headings for sections like 'הערכת מפתח', 'תובנות עיקריות', and 'תחזית'.

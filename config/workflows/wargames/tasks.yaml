@@ -1,0 +1,38 @@
+red_team_task:
+  agent: "red_team_agent"
+  description: |
+    Analyze the provided intelligence context and the 'Blue Team's' action.
+    - Intelligence Context: {intelligence_context}
+    - Blue Team Action: {user_action}
+    
+    Based on the adversary's perspective detailed in the intelligence context, what is their most likely strategic response to this action?
+  expected_output: "A detailed description of the Red Team's (adversary's) reaction, including their strategic reasoning."
+
+blue_team_task:
+  agent: "blue_team_agent"
+  context:
+    - "red_team_task"
+  description: |
+    You have received the Red Team's response to the Blue Team's initial action.
+    - Intelligence Context: {intelligence_context}
+    - Initial Blue Action: {user_action}
+    - Red Team Reaction: (from red_team_task context)
+    
+    Formulate the most effective and logical counter-response for the Blue Team.
+  expected_output: "A clear, actionable counter-response for the Blue Team, including the strategic rationale."
+
+summary_task:
+  agent: "game_master"
+  context:
+    - "red_team_task"
+    - "blue_team_task"
+  description: |
+    Review the entire simulation sequence.
+    - Intelligence Context: {intelligence_context}
+    - 1. Initial Blue Action: {user_action}
+    - 2. Red Team Reaction: (from red_team_task context)
+    - 3. Blue Team Counter-Response: (from blue_team_task context)
+    
+    Summarize this entire exchange into a high-level strategic analysis. Highlight the key risks and outcomes. 
+    IMPORTANT: The entire final output MUST be written in professional, high-level Hebrew.
+  expected_output: "A concise executive summary in Hebrew, detailing the simulation's flow, key learnings, and potential escalation points."
